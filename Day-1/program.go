@@ -25,9 +25,7 @@ func readLines(path string) ([]int, error) {
 		i, err := strconv.Atoi(scanner.Text())
 
 		if err != nil {
-			// handle error
-			fmt.Println(err)
-			os.Exit(2)
+			return nil, err
 		}
 
 		lines = append(lines, i)
@@ -39,7 +37,6 @@ func part1() {
 	inputSlice, err := readLines("input.txt")
 
 	if err != nil {
-		// handle error
 		fmt.Println(err)
 		os.Exit(2)
 	}
@@ -55,7 +52,6 @@ func part1() {
 			increaseCount++
 		}
 		prev = value
-
 	}
 
 	fmt.Println(increaseCount)
@@ -65,7 +61,6 @@ func part2() {
 	inputSlice, err := readLines("input.txt")
 
 	if err != nil {
-		// handle error
 		fmt.Println(err)
 		os.Exit(2)
 	}
@@ -73,15 +68,12 @@ func part2() {
 	prev, increaseCount := 0, 0
 
 	for index := range inputSlice {
-
 		slidingWindow := inputSlice[index : index+3]
 		slidingSum := 0
 
 		if slidingWindow[len(slidingWindow)-1] == 0 {
 			continue
 		}
-
-		fmt.Println(slidingWindow)
 
 		for _, slidingValue := range slidingWindow {
 			slidingSum += slidingValue
@@ -91,7 +83,6 @@ func part2() {
 			increaseCount++
 		}
 		prev = slidingSum
-
 	}
 
 	fmt.Println(increaseCount)
