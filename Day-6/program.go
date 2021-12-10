@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	ages, err := ReadLines("input-test.txt")
+	ages, err := ReadLines("input.txt")
 
 	if err != nil {
 		fmt.Println(err)
@@ -18,6 +18,7 @@ func main() {
 	}
 
 	Part1(ages)
+	Part2(ages)
 }
 
 func ReadLines(path string) ([]int, error) {
@@ -40,8 +41,12 @@ func ReadLines(path string) ([]int, error) {
 }
 
 func Part1(ages []int) {
-	//fmt.Println("Initial state: ", ages)
 	fishCount := Simulate(ages, 1, 80)
+	fmt.Println(fishCount)
+}
+
+func Part2(ages []int) {
+	fishCount := FastSimulate(ages, 256)
 	fmt.Println(fishCount)
 }
 
@@ -57,11 +62,6 @@ func GetLowestAge(ages []int) int {
 
 func Simulate(ages []int, currentDay int, targetDay int) int {
 	var rv []int
-	// lowestAge := GetLowestAge(ages)
-	// stepSize := 1
-	// if lowestAge > 1 {
-	// 	stepSize = lowestAge
-	// }
 
 	for i := 0; i < len(ages); i++ {
 		if ages[i] == 0 {
@@ -71,12 +71,41 @@ func Simulate(ages []int, currentDay int, targetDay int) int {
 			rv = append(rv, ages[i]-1)
 		}
 	}
-	//lowestAge = GetLowestAge(rv)
-	//fmt.Println("Day ", currentDay, rv, "Lowest Age:", lowestAge)
+
 	if currentDay >= targetDay {
 		return len(rv)
 	}
 	currentDay += 1
-	fmt.Println(currentDay)
 	return Simulate(rv, currentDay, targetDay)
+}
+
+func GetSumOfSlice(listOfInts []int) int {
+	rv := 0
+	for _, n := range listOfInts {
+		rv += n
+	}
+	return rv
+}
+
+func FastSimulate(ages []int, targetDay int) int {
+	fishCounts := make([]int, 9)
+	for i := 0; i < len(ages); i++ {
+		fishCounts[ages[i]] += 1
+	}
+
+	for i := 0; i < targetDay; i++ {
+		originalSeven := fishCounts[7]
+		originalZero := fishCounts[0]
+		fishCounts[7] = fishCounts[8]
+		fishCounts[8] = fishCounts[0] //Spawn new fish
+		fishCounts[0] = fishCounts[1]
+		fishCounts[1] = fishCounts[2]
+		fishCounts[2] = fishCounts[3]
+		fishCounts[3] = fishCounts[4]
+		fishCounts[4] = fishCounts[5]
+		fishCounts[5] = fishCounts[6]
+		fishCounts[6] = originalSeven + originalZero
+	}
+
+	return GetSumOfSlice(fishCounts)
 }
