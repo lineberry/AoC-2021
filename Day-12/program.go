@@ -7,8 +7,69 @@ import (
 	"strings"
 )
 
+type Cave struct {
+	Name       string
+	IsSmall    bool
+	VisitCount int
+	Neighbors  map[string]*Cave
+}
+
+func NewCave(name string) *Cave {
+	isSmall := strings.ToLower(name) == name
+
+	return &Cave{
+		Name:       name,
+		IsSmall:    isSmall,
+		VisitCount: 0,
+		Neighbors:  map[string]*Cave{},
+	}
+}
+
+type CaveMap struct {
+	Caves map[string]*Cave
+}
+
+func NewCaveMap() *CaveMap {
+	return &CaveMap{
+		Caves: map[string]*Cave{},
+	}
+}
+
+func (m *CaveMap) AddCave(caveName string) {
+	cave := m.Caves[caveName]
+	if cave == nil {
+		c := NewCave(caveName)
+		m.Caves[caveName] = c
+	}
+}
+
+func (m *CaveMap) AddEdge(caveName1, caveName2 string) {
+	cave1 := m.Caves[caveName1]
+	cave2 := m.Caves[caveName2]
+
+	if cave1 == nil || cave2 == nil {
+		panic("not all caves exist")
+	}
+
+	if _, ok := cave1.Neighbors[caveName2]; ok {
+		return
+	}
+
+	if caveName1 == "start" || caveName2 == "end" {
+		cave1.Neighbors[caveName2] = cave2
+	} else if caveName2 == "start" || caveName1 == "end" {
+		cave2.Neighbors[caveName1] = cave1
+	} else {
+		cave1.Neighbors[caveName2] = cave2
+		cave2.Neighbors[caveName1] = cave1
+	}
+
+	//m.Caves[caveName1] = cave1
+	//m.Caves[caveName2] = cave2
+}
+
 func main() {
-	caveMap, err := readLines("input-med.txt")
+	caveMap, err := readLines("input.txt")
 
 	if err != nil {
 		fmt.Println(err)
@@ -18,14 +79,14 @@ func main() {
 	Part1(caveMap)
 }
 
-func readLines(path string) (map[string][]string, error) {
+func readLines(path string) (*CaveMap, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
 
-	caveMap := make(map[string][]string)
+	caveMap := NewCaveMap()
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
@@ -33,29 +94,45 @@ func readLines(path string) (map[string][]string, error) {
 		start := startAndEnd[0]
 		end := startAndEnd[1]
 
-		_, startExists := caveMap[start]
-		_, endExists := caveMap[end]
-		if !startExists && end != "start" {
-			caveMap[start] = []string{end}
-		} else if end != "start" {
-			caveMap[start] = append(caveMap[start], end)
-		}
+		caveMap.AddCave(start)
+		caveMap.AddCave(end)
+		caveMap.AddEdge(start, end)
+	}
 
-		if !endExists && start != "start" {
-			caveMap[end] = []string{start}
-		} else if start != "start" {
-			caveMap[end] = append(caveMap[end], start)
-		}
-	}
-	//Remove any entries where there is only one small destination
-	for key := range caveMap {
-		if len(caveMap[key]) == 1 && caveMap[key][0] == strings.ToLower(caveMap[key][0]) && caveMap[key][0] != "end" {
-			delete(caveMap, key)
-		}
-	}
 	return caveMap, scanner.Err()
 }
 
-func Part1(caveMap map[string][]string) {
-	fmt.Println(caveMap)
+func Part1(caveMap *CaveMap) {
+	isVisited := make(map[string]bool)
+	pathList := map[string]int{"start": 1}
+	pathCount := new(int)
+	*pathCount = 0
+	//fmt.Println(caveMap)
+	PrintAllPaths("start", "end", caveMap, isVisited, pathList, pathCount)
+	fmt.Println(*pathCount)
+}
+
+func PrintAllPaths(start string, end string, caveMap *CaveMap, isVisited map[string]bool, localPathList map[string]int, pathCount *int) {
+	if start == end {
+		(*pathCount)++
+		//fmt.Println(localPathList)
+		//fmt.Println(*pathCount)
+		return
+	}
+	if caveMap.Caves[start].IsSmall {
+		isVisited[start] = true
+	}
+
+	for neighborName := range caveMap.Caves[start].Neighbors {
+		if !isVisited[neighborName] {
+			localPathList[neighborName]++
+			PrintAllPaths(neighborName, end, caveMap, isVisited, localPathList, pathCount)
+			delete(localPathList, neighborName)
+		}
+
+	}
+
+	if caveMap.Caves[start].IsSmall {
+		isVisited[start] = false
+	}
 }
