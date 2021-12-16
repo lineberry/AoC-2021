@@ -19,7 +19,7 @@ type FoldInstruction struct {
 }
 
 func main() {
-	grid, coords, instructions, err := readLines("input-test.txt")
+	grid, coords, instructions, err := readLines("input.txt")
 
 	if err != nil {
 		fmt.Println(err)
@@ -30,8 +30,12 @@ func main() {
 }
 
 func readLines(path string) ([][]string, []Coordinate, []FoldInstruction, error) {
-	gridHeight := 15
-	gridWidth := 11
+	//real values
+	gridHeight := 895
+	gridWidth := 1311
+	//test values
+	// gridHeight := 15
+	// gridWidth := 11
 	readInstructions := false
 
 	grid := make([][]string, gridHeight)
@@ -108,14 +112,60 @@ func GetFoldedCoordinate(coord Coordinate, instruction FoldInstruction) Coordina
 	return rv
 }
 
-func Fold(grid *[][]string, coords []Coordinate, instruction FoldInstruction) {
-	fmt.Println("Fold")
+func Fold(grid *[][]string, coords []Coordinate, instruction FoldInstruction) []Coordinate {
+	var rv []Coordinate
+	for _, c := range coords {
+		switch instruction.foldAxis {
+		case "x":
+			if c.x > instruction.foldIndex {
+				rv = append(rv, GetFoldedCoordinate(c, instruction))
+			} else {
+				rv = append(rv, c)
+			}
+		case "y":
+			if c.y > instruction.foldIndex {
+				rv = append(rv, GetFoldedCoordinate(c, instruction))
+			} else {
+				rv = append(rv, c)
+			}
+		}
+	}
+	return rv
+}
+
+func NewGridFromCoords(coords []Coordinate) *[][]string {
+	maxX, maxY := 0, 0
+	for _, c := range coords {
+		if c.x > maxX {
+			maxX = c.x
+		}
+		if c.y > maxY {
+			maxY = c.y
+		}
+	}
+	grid := make([][]string, maxY+1)
+	for y := 0; y < len(grid); y++ {
+		grid[y] = make([]string, maxX+1)
+		for x := 0; x < len(grid[y]); x++ {
+			grid[y][x] = " "
+		}
+	}
+	for _, c := range coords {
+		grid[c.y][c.x] = "█"
+	}
+	return &grid
 }
 
 func Part1(grid *[][]string, coords []Coordinate, instructions []FoldInstruction) {
-	PrintGrid(grid)
-	for _, i := range instructions {
-		Fold(grid, coords, i)
+	localCoords := coords
+	localGrid := grid
+	for index, i := range instructions {
+		localCoords = Fold(grid, localCoords, i)
+		localGrid = NewGridFromCoords(localCoords)
+		if index == 0 {
+			fmt.Println(GetCountOfDots(localGrid))
+		}
+
 	}
-	fmt.Println(GetCountOfDots(grid))
+	PrintGrid(localGrid)
 }
