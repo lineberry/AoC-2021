@@ -76,6 +76,19 @@ func readLines(path string) ([][]string, []Coordinate, []FoldInstruction, error)
 	return grid, coords, foldInstructions, scanner.Err()
 }
 
+func GetCountOfDots(grid *[][]string) int {
+	derefGrid := *grid
+	count := 0
+	for y := 0; y < len(derefGrid); y++ {
+		for x := 0; x < len(derefGrid[y]); x++ {
+			if derefGrid[y][x] == "█" {
+				count++
+			}
+		}
+	}
+	return count
+}
+
 func PrintGrid(grid *[][]string) {
 	for y := 0; y < len(*grid); y++ {
 		fmt.Println((*grid)[y])
@@ -104,4 +117,5 @@ func Part1(grid *[][]string, coords []Coordinate, instructions []FoldInstruction
 	for _, i := range instructions {
 		Fold(grid, coords, i)
 	}
+	fmt.Println(GetCountOfDots(grid))
 }
