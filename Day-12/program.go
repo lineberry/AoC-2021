@@ -8,20 +8,18 @@ import (
 )
 
 type Cave struct {
-	Name       string
-	IsSmall    bool
-	VisitCount int
-	Neighbors  map[string]*Cave
+	Name      string
+	IsSmall   bool
+	Neighbors map[string]*Cave
 }
 
 func NewCave(name string) *Cave {
 	isSmall := strings.ToLower(name) == name
 
 	return &Cave{
-		Name:       name,
-		IsSmall:    isSmall,
-		VisitCount: 0,
-		Neighbors:  map[string]*Cave{},
+		Name:      name,
+		IsSmall:   isSmall,
+		Neighbors: map[string]*Cave{},
 	}
 }
 
@@ -63,9 +61,6 @@ func (m *CaveMap) AddEdge(caveName1, caveName2 string) {
 		cave1.Neighbors[caveName2] = cave2
 		cave2.Neighbors[caveName1] = cave1
 	}
-
-	//m.Caves[caveName1] = cave1
-	//m.Caves[caveName2] = cave2
 }
 
 func main() {
@@ -77,6 +72,7 @@ func main() {
 	}
 
 	Part1(caveMap)
+	Part2(caveMap)
 }
 
 func readLines(path string) (*CaveMap, error) {
@@ -104,19 +100,26 @@ func readLines(path string) (*CaveMap, error) {
 
 func Part1(caveMap *CaveMap) {
 	isVisited := make(map[string]bool)
-	pathList := map[string]int{"start": 1}
+	pathList := []string{"start"}
 	pathCount := new(int)
-	*pathCount = 0
-	//fmt.Println(caveMap)
 	PrintAllPaths("start", "end", caveMap, isVisited, pathList, pathCount)
 	fmt.Println(*pathCount)
 }
 
-func PrintAllPaths(start string, end string, caveMap *CaveMap, isVisited map[string]bool, localPathList map[string]int, pathCount *int) {
+func Part2(caveMap *CaveMap) {
+	visitCount := make(map[string]int)
+	pathList := []string{"start"}
+	pathCount := new(int)
+	PrintAllPathsPartTwo("start", "end", caveMap, visitCount, pathList, false, pathCount)
+	fmt.Println(*pathCount)
+}
+
+func PrintAllPaths(start string, end string, caveMap *CaveMap, isVisited map[string]bool, localPathList []string, pathCount *int) {
 	if start == end {
 		(*pathCount)++
 		//fmt.Println(localPathList)
 		//fmt.Println(*pathCount)
+		//fmt.Println(isVisited)
 		return
 	}
 	if caveMap.Caves[start].IsSmall {
@@ -125,14 +128,40 @@ func PrintAllPaths(start string, end string, caveMap *CaveMap, isVisited map[str
 
 	for neighborName := range caveMap.Caves[start].Neighbors {
 		if !isVisited[neighborName] {
-			localPathList[neighborName]++
+			localPathList = append(localPathList, neighborName)
 			PrintAllPaths(neighborName, end, caveMap, isVisited, localPathList, pathCount)
-			delete(localPathList, neighborName)
+			localPathList = localPathList[:len(localPathList)-1]
 		}
 
 	}
 
 	if caveMap.Caves[start].IsSmall {
 		isVisited[start] = false
+	}
+}
+
+func PrintAllPathsPartTwo(start string, end string, caveMap *CaveMap, visitCount map[string]int, localPathList []string, isTriggered bool, pathCount *int) {
+	if start == end {
+		(*pathCount)++
+		return
+	}
+	if caveMap.Caves[start].IsSmall {
+		visitCount[start]++
+		if visitCount[start] == 2 {
+			isTriggered = true
+		}
+	}
+
+	for neighborName := range caveMap.Caves[start].Neighbors {
+		if !caveMap.Caves[neighborName].IsSmall || (visitCount[neighborName] < 2 && !isTriggered) || (visitCount[neighborName] < 1 && isTriggered) {
+			localPathList = append(localPathList, neighborName)
+			PrintAllPathsPartTwo(neighborName, end, caveMap, visitCount, localPathList, isTriggered, pathCount)
+			localPathList = localPathList[:len(localPathList)-1]
+		}
+
+	}
+
+	if caveMap.Caves[start].IsSmall {
+		visitCount[start]--
 	}
 }
