@@ -11,14 +11,14 @@ import (
 var InjectionCache map[string]string
 
 func main() {
-	template, rules, err := readLines("input-test.txt")
+	template, _, err := readLines("input.txt")
 
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(2)
 	}
 
-	Part1(template, rules)
+	Part1(template)
 }
 
 func readLines(path string) (string, map[string]string, error) {
@@ -55,11 +55,11 @@ func readLines(path string) (string, map[string]string, error) {
 	return template, rules, err
 }
 
-func Part1(template string, rules map[string]string) {
+func Part1(template string) {
 	updatedPolymer := template
 	for i := 0; i < 10; i++ {
 		fmt.Println("Step", i+1)
-		updatedPolymer = Step(updatedPolymer, rules)
+		updatedPolymer = Step2(updatedPolymer)
 		//fmt.Println(updatedPolymer)
 	}
 	letterCounts := SumElementCounts(updatedPolymer)
@@ -110,7 +110,7 @@ func JoinPolymerSlices(polymerSlices []string) string {
 	return sb.String()
 }
 
-func Step(template string, rules map[string]string) string {
+func Step(template string) string {
 	stringSlices := make([]string, len(template)-1)
 
 	start := time.Now()
@@ -132,4 +132,21 @@ func Step(template string, rules map[string]string) string {
 	t2 := time.Now()
 	fmt.Println("Took ", t2.Sub(t1), "to inject rules")
 	return JoinPolymerSlices(stringSlices)
+}
+
+func Step2(template string) string {
+	start := time.Now()
+	var sb strings.Builder
+	for i := 0; i < len(template)-1; i++ {
+		pair := template[i : i+2]
+		if i == 0 {
+			sb.WriteString(InjectionCache[pair])
+		} else {
+			sb.WriteString(InjectionCache[pair][1:3])
+		}
+
+	}
+	end := time.Now()
+	fmt.Println("Took ", end.Sub(start), "to step.")
+	return sb.String()
 }
