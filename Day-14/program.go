@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
+
+var InjectionCache map[string]string
 
 func main() {
 	template, rules, err := readLines("input-test.txt")
@@ -41,14 +44,20 @@ func readLines(path string) (string, map[string]string, error) {
 		} else {
 			pair := strings.Split(scannerText, " -> ")
 			rules[pair[0]] = pair[1]
+
 		}
+	}
+
+	InjectionCache = make(map[string]string)
+	for key, value := range rules {
+		InjectionCache[key] = string(key[0]) + value + string(key[1])
 	}
 	return template, rules, err
 }
 
 func Part1(template string, rules map[string]string) {
 	updatedPolymer := template
-	for i := 0; i < 40; i++ {
+	for i := 0; i < 10; i++ {
 		fmt.Println("Step", i+1)
 		updatedPolymer = Step(updatedPolymer, rules)
 		//fmt.Println(updatedPolymer)
@@ -86,30 +95,41 @@ func GetMaxElementCount(letterCount map[string]int) int {
 }
 
 func JoinPolymerSlices(polymerSlices []string) string {
-	rv := ""
+	start := time.Now()
+	var sb strings.Builder
 	for i, s := range polymerSlices {
 		if i == 0 {
-			rv += s
+			sb.WriteString(s)
 		} else {
-			rv += s[1:3]
+			sb.WriteString(s[1:3])
 		}
 	}
-	return rv
+
+	end := time.Now()
+	fmt.Println("Took", end.Sub(start), "to join slices")
+	return sb.String()
 }
 
 func Step(template string, rules map[string]string) string {
 	stringSlices := make([]string, len(template)-1)
+
+	start := time.Now()
+
 	for i := 0; i < len(stringSlices); i++ {
 		stringSlices[i] = template[i : i+2]
 	}
-	for i := 0; i < len(stringSlices); i++ {
-		for key, value := range rules {
-			if stringSlices[i] == key {
-				stringSlices[i] = string(stringSlices[i][0]) + value + string(stringSlices[i][1])
-				break
-			}
-		}
 
+	t1 := time.Now()
+
+	fmt.Println("Took ", t1.Sub(start), "to create stringslices")
+
+	//fmt.Println(InjectionCache)
+
+	for i := 0; i < len(stringSlices); i++ {
+		stringSlices[i] = InjectionCache[stringSlices[i]]
 	}
+
+	t2 := time.Now()
+	fmt.Println("Took ", t2.Sub(t1), "to inject rules")
 	return JoinPolymerSlices(stringSlices)
 }
