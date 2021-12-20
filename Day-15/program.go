@@ -96,7 +96,7 @@ func PrintGrid(grid [][]Cave) {
 }
 
 func main() {
-	caveMap, err := readLines("input-test-large.txt")
+	caveMap, err := readLines("input.txt")
 
 	if err != nil {
 		fmt.Println(err)
@@ -104,6 +104,7 @@ func main() {
 	}
 
 	Part1(caveMap)
+	Part2(caveMap)
 }
 
 func readLines(path string) ([][]Cave, error) {
@@ -115,11 +116,11 @@ func readLines(path string) ([][]Cave, error) {
 	scanner := bufio.NewScanner(file)
 
 	//Real values
-	//gridHeight := 100
-	//gridWidth := 100
+	gridHeight := 100
+	gridWidth := 100
 	//Test values
-	gridHeight := 50
-	gridWidth := 50
+	//gridHeight := 10
+	//gridWidth := 10
 
 	caveMap := make([][]Cave, gridHeight)
 	for index := range caveMap {
@@ -137,6 +138,43 @@ func readLines(path string) ([][]Cave, error) {
 	}
 
 	return caveMap, err
+}
+
+func MaxNine(number int) int {
+	if number%10 == 0 {
+		return 1
+	}
+	if number > 10 {
+		return (number + 1) % 10
+	}
+	return number % 10
+}
+
+func GenerateLargerMap(originalMap [][]Cave) [][]Cave {
+	currentGridLevelXPos, currentGridLevelYPos := 0, 0
+	originalYLen := len(originalMap)
+	newYLen := 5 * originalYLen
+	originalXLen := len(originalMap[0])
+	newXLen := 5 * originalXLen
+
+	largerMap := make([][]Cave, newYLen)
+	for x := 0; x < newXLen; x++ {
+		largerMap[x] = make([]Cave, newXLen)
+	}
+
+	for y := 0; y < 5*originalYLen; y++ {
+		currentGridLevelXPos = 0
+		if y%originalYLen == 0 && y != 0 {
+			currentGridLevelYPos++
+		}
+		for x := 0; x < 5*originalXLen; x++ {
+			if x%originalXLen == 0 && x != 0 {
+				currentGridLevelXPos++
+			}
+			largerMap[y][x] = Cave{RiskRating: MaxNine(originalMap[y%originalYLen][x%originalXLen].RiskRating + currentGridLevelXPos + currentGridLevelYPos), Coord: Coordinate{x: x, y: y}}
+		}
+	}
+	return largerMap
 }
 
 func ReconstructPath(cameFrom map[Coordinate]Cave, currentPosition Cave) int {
@@ -217,7 +255,14 @@ func AStar(caveMap [][]Cave) int {
 }
 
 func Part1(caveMap [][]Cave) {
-	PrintGrid(caveMap)
+	//PrintGrid(caveMap)
 	lowestRiskRating := AStar(caveMap)
+	fmt.Println(lowestRiskRating)
+}
+
+func Part2(caveMap [][]Cave) {
+	largerMap := GenerateLargerMap(caveMap)
+	//PrintGrid(largerMap)
+	lowestRiskRating := AStar(largerMap)
 	fmt.Println(lowestRiskRating)
 }
