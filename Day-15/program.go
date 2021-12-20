@@ -141,13 +141,10 @@ func readLines(path string) ([][]Cave, error) {
 }
 
 func MaxNine(number int) int {
-	if number%10 == 0 {
-		return 1
+	if number > 9 {
+		return number - 9
 	}
-	if number > 10 {
-		return (number + 1) % 10
-	}
-	return number % 10
+	return number
 }
 
 func GenerateLargerMap(originalMap [][]Cave) [][]Cave {
