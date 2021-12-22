@@ -9,9 +9,10 @@ import (
 )
 
 var InjectionCache map[string]string
+var BigInjectionCache map[string]string
 
 func main() {
-	template, _, err := readLines("input.txt")
+	template, _, err := readLines("input-test.txt")
 
 	if err != nil {
 		fmt.Println(err)
@@ -19,6 +20,7 @@ func main() {
 	}
 
 	Part1(template)
+	Part2(template)
 }
 
 func readLines(path string) (string, map[string]string, error) {
@@ -52,7 +54,52 @@ func readLines(path string) (string, map[string]string, error) {
 	for key, value := range rules {
 		InjectionCache[key] = string(key[0]) + value + string(key[1])
 	}
+
+	injectionKeys := GetKeysFromMap(InjectionCache)
+
+	bigInjectionKeys := BuildBigInjectionKeys(injectionKeys, 4)
+
+	BigInjectionCache = make(map[string]string, len(bigInjectionKeys))
+
+	for _, key := range bigInjectionKeys {
+		BigInjectionCache[key] = Step2(key)
+	}
+
 	return template, rules, err
+}
+
+func GetKeysFromMap(theMap map[string]string) []string {
+	keys := make([]string, len(theMap))
+
+	i := 0
+	for k := range theMap {
+		keys[i] = k
+		i++
+	}
+	return keys
+}
+
+func GenerateKeysFromPreviousKey(prevKey string) []string {
+	var rv []string
+	for key := range InjectionCache {
+		if strings.HasPrefix(key, string(prevKey[1])) { //Does they key start with the last letter of the previous pair?
+			rv = append(rv, prevKey+string(key[1])) //Add the second letter of th
+		}
+	}
+	return rv
+}
+
+func BuildBigInjectionKeys(currentKeys []string, maxKeyLength int) []string {
+	if len(currentKeys[0]) == maxKeyLength {
+		return currentKeys
+	}
+
+	var newKeys []string
+	for _, key := range currentKeys {
+		newKeys = append(newKeys, GenerateKeysFromPreviousKey(key)...)
+	}
+
+	return BuildBigInjectionKeys(newKeys, maxKeyLength)
 }
 
 func Part1(template string) {
@@ -60,6 +107,18 @@ func Part1(template string) {
 	for i := 0; i < 10; i++ {
 		fmt.Println("Step", i+1)
 		updatedPolymer = Step2(updatedPolymer)
+		//fmt.Println(updatedPolymer)
+	}
+	letterCounts := SumElementCounts(updatedPolymer)
+	fmt.Println("Difference between highest and lowest is", GetMaxElementCount(letterCounts)-GetMinElementCount(letterCounts))
+}
+
+func Part2(template string) {
+	updatedPolymer := template
+	stepSize := len(template)
+	for i := 0; i < 10; i++ {
+		fmt.Println("Step", i+1)
+		updatedPolymer = BigStep(updatedPolymer, stepSize)
 		//fmt.Println(updatedPolymer)
 	}
 	letterCounts := SumElementCounts(updatedPolymer)
@@ -135,7 +194,7 @@ func Step(template string) string {
 }
 
 func Step2(template string) string {
-	start := time.Now()
+	//start := time.Now()
 	var sb strings.Builder
 	for i := 0; i < len(template)-1; i++ {
 		pair := template[i : i+2]
@@ -145,6 +204,30 @@ func Step2(template string) string {
 			sb.WriteString(InjectionCache[pair][1:3])
 		}
 
+	}
+	//end := time.Now()
+	//fmt.Println("Took ", end.Sub(start), "to step.")
+	return sb.String()
+}
+
+func BigStep(template string, stepSize int) string {
+	start := time.Now()
+	var sb strings.Builder
+	pairCount := 0
+	startIndex := 0
+	for {
+		endIndex := startIndex + stepSize
+		pair := template[startIndex:endIndex]
+		if pairCount == 0 {
+			sb.WriteString(BigInjectionCache[pair])
+		} else {
+			sb.WriteString(BigInjectionCache[pair][1:])
+		}
+		if endIndex >= len(template) {
+			break
+		}
+		startIndex = endIndex - 1
+		pairCount++
 	}
 	end := time.Now()
 	fmt.Println("Took ", end.Sub(start), "to step.")

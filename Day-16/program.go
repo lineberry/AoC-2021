@@ -4,11 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 )
 
 func main() {
-	template, rules, err := readLines("input-test.txt")
+	err := readLines("input-test.txt")
 
 	if err != nil {
 		fmt.Println(err)
@@ -18,18 +17,18 @@ func main() {
 	Part1()
 }
 
-func readLines(path string) (, error) {
+func readLines(path string) error {
 	file, err := os.Open(path)
 	if err != nil {
-		return "error", nil, err
+		return err
 	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-		
+
 	}
-	return template, rules, err
+	return err
 }
 
 func Part1() {
