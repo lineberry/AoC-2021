@@ -9,7 +9,7 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "Day-14"
+            "program": "Day-21"
         }
     ]
 }
